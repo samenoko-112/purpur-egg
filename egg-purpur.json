@@ -1,0 +1,106 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PLCN_v1",
+        "update_url": "https://github.com/pelican-dev/panel/raw/main/database/Seeders/eggs/minecraft/egg-purpur.json"
+    },
+    "exported_at": "2025-02-13T06:33:35+00:00",
+    "name": "Purpur",
+    "author": "parker@example.com",
+    "uuid": "5da37ef6-58da-4169-90a6-e683e1721247",
+    "description": "Purpur is a highly customizable, performance-focused Paper fork with additional features.",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 21": "ghcr.io/parkervcp/yolks:java_21",
+        "Java 17": "ghcr.io/parkervcp/yolks:java_17",
+        "Java 16": "ghcr.io/parkervcp/yolks:java_16",
+        "Java 11": "ghcr.io/parkervcp/yolks:java_11",
+        "Java 8": "ghcr.io/parkervcp/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -XX:MaxRAMPercentage=95.0 -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": {
+            "server.properties": {
+                "parser": "properties",
+                "find": {
+                    "server-ip": "0.0.0.0",
+                    "server-port": "{{server.allocations.default.port}}",
+                    "query.port": "{{server.allocations.default.port}}"
+                }
+            }
+        },
+        "startup": {
+            "done": ")! For help, type "
+        },
+        "logs": {},
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#! /bin/ash\n# Purpur Installation Script\n#\n# Server Files: /mnt/server\nPROJECT=purpur\n\nif [ -n \"${DL_PATH}\" ]; then\n    echo -e \"Using supplied download url: ${DL_PATH}\"\n    DOWNLOAD_URL=`eval echo $(echo ${DL_PATH} | sed -e 's/{{/${/g' -e 's/}}/}/g')`\nelse\n    LATEST_VERSION=`curl -s https://api.purpurmc.org/v2/purpur | jq -r '.versions[-1]'`\n    VER_EXISTS=`curl -s https://api.purpurmc.org/v2/purpur | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep -m1 true`\n\n    if [ \"${VER_EXISTS}\" == \"true\" ]; then\n        echo -e \"Version is valid. Using version ${MINECRAFT_VERSION}\"\n    else\n        echo -e \"Specified version not found. Defaulting to the latest ${PROJECT} version\"\n        MINECRAFT_VERSION=${LATEST_VERSION}\n    fi\n\n    LATEST_BUILD=`curl -s https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION} | jq -r '.builds.all[-1]'`\n    BUILD_EXISTS=`curl -s https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION} | jq -r --argjson BUILD ${BUILD_NUMBER} '.builds.all[] | tostring | contains($BUILD)' | grep -m1 true`\n\n    if [ \"${BUILD_EXISTS}\" == \"true\" ]; then\n        echo -e \"Build is valid for version ${MINECRAFT_VERSION}. Using build ${BUILD_NUMBER}\"\n    else\n        echo -e \"Using the latest ${PROJECT} build for version ${MINECRAFT_VERSION}\"\n        BUILD_NUMBER=${LATEST_BUILD}\n    fi\n\n    JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar\n\n    echo \"Version being downloaded\"\n    echo -e \"MC Version: ${MINECRAFT_VERSION}\"\n    echo -e \"Build: ${BUILD_NUMBER}\"\n    echo -e \"JAR Name of Build: ${JAR_NAME}\"\n    DOWNLOAD_URL=https://api.purpurmc.org/v2/purpur/${MINECRAFT_VERSION}/${BUILD_NUMBER}/download\nfi\n\ncd /mnt/server\n\necho -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\n\nif [ -f ${SERVER_JARFILE} ]; then\n    mv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\nfi\n\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\n\nif [ ! -f server.properties ]; then\n    echo -e \"Downloading MC server.properties\"\n    curl -o server.properties https://raw.githubusercontent.com/parkervcp/eggs/master/minecraft/java/server.properties\nfi",
+            "container": "ghcr.io/parkervcp/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Minecraft Version",
+            "description": "The version of Minecraft to download.\n\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "MINECRAFT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:20"
+            ],
+            "sort": 1
+        },
+        {
+            "name": "Server Jar File",
+            "description": "The name of the server jarfile to run the server with.",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "regex:/^([\\w\\d._-]+)(\\.jar)$/"
+            ],
+            "sort": 2
+        },
+        {
+            "name": "Download Path",
+            "description": "A URL to use to download a server.jar rather than the ones in the install script. This is not user viewable.",
+            "env_variable": "DL_PATH",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 3
+        },
+        {
+            "name": "Build Number",
+            "description": "The build number for the Purpur release.\n\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:20"
+            ],
+            "sort": 4
+        }
+    ]
+}
